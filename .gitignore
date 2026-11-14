@@ -1,0 +1,60 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated temporary files
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# OS files
+desktop.ini
+
+# Python Cache
+__pycache__/
+
+# Database Backups
+data/backup/
+
+# Generated Data
+data/processed/
+data/history/
+
+# Model Artifacts - Keep only final packaged model
+artifacts/*.joblib
+!artifacts/fraud_detection_model_v2.joblib
+
+# Backup Scripts
+src/models/*_backup.py
