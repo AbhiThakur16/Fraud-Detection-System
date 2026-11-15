@@ -1,20 +1,30 @@
+
 import os
 import psycopg2
 from dotenv import load_dotenv
 
+# Load environment variables from .env
 load_dotenv()
 
 
 def get_connection():
-    """Connect Python application to PostgreSQL."""
+    """
+    Establish a PostgreSQL database connection.
+
+    Supports:
+    - Local PostgreSQL
+    - Render PostgreSQL
+    - SSL-secured cloud connections
+    """
 
     try:
         connection = psycopg2.connect(
             host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
+            port=os.getenv("DB_PORT", "5432"),
             database=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD")
+            password=os.getenv("DB_PASSWORD"),
+            sslmode=os.getenv("DB_SSLMODE", "require")
         )
 
         return connection
@@ -26,95 +36,35 @@ def get_connection():
 
 if __name__ == "__main__":
 
-    conn = None
-    cursor = None
+    connection = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        connection = get_connection()
 
-        cursor.execute("""
-            SELECT
-                EXTRACT(HOUR FROM occurred_at)::INTEGER
-                    AS transaction_hour,
+        print("Database connection successful!")
 
-                COUNT(*) AS total_transactions,
+        cursor = connection.cursor()
 
-                COUNT(*) FILTER (
-                    WHERE is_fraud = TRUE
-                ) AS fraud_count,
+        cursor.execute("SELECT version();")
 
-                ROUND(
-                    COUNT(*) FILTER (
-                        WHERE is_fraud = TRUE
-                    ) * 100.0 / COUNT(*),
-                    2
-                ) AS fraud_percentage
+        database_version = cursor.fetchone()
 
-            FROM transactions
+        print("PostgreSQL Version:")
+        print(database_version[0])
 
-            GROUP BY transaction_hour
+        cursor.execute("SELECT current_database();")
 
-            ORDER BY transaction_hour;
-        """)
+        database_name = cursor.fetchone()
 
-        print("\n===================================")
-        print("HOUR-WISE FRAUD ANALYSIS")
-        print("===================================")
+        print("Connected Database:")
+        print(database_name[0])
 
-        for row in cursor.fetchall():
-
-            print(
-                f"Hour: {row[0]:02d}:00 | "
-                f"Total: {row[1]} | "
-                f"Fraud: {row[2]} | "
-                f"Fraud Rate: {row[3]}%"
-            )
-
-        cursor.execute("""
-            SELECT
-                EXTRACT(DOW FROM occurred_at)::INTEGER
-                    AS transaction_day,
-
-                TO_CHAR(occurred_at, 'FMDay')
-                    AS day_name,
-
-                COUNT(*) AS total_transactions,
-
-                COUNT(*) FILTER (
-                    WHERE is_fraud = TRUE
-                ) AS fraud_count
-
-            FROM transactions
-
-            GROUP BY transaction_day, day_name
-
-            ORDER BY transaction_day;
-        """)
-
-        print("\n===================================")
-        print("DAY-WISE FRAUD ANALYSIS")
-        print("===================================")
-
-        for row in cursor.fetchall():
-
-            print(
-                f"Day: {row[1].strip()} | "
-                f"Total: {row[2]} | "
-                f"Fraud: {row[3]}"
-            )
-
-        print("\nAnalysis completed successfully.")
+        cursor.close()
 
     except Exception as error:
-        print(f"Error: {error}")
+        print(f"Connection test failed: {error}")
 
     finally:
-
-        if cursor:
-            cursor.close()
-
-        if conn:
-            conn.close()
-
-        print("\nDatabase connection closed.")
+        if connection:
+            connection.close()
+            print("Database connection closed.")
