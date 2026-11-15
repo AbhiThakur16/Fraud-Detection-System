@@ -24,7 +24,15 @@ st_autorefresh(
     key="fraud_dashboard_refresh"
 )
 
-API_URL = "http://127.0.0.1:8000"
+# Cloud deployment: set API_URL in Streamlit Community Cloud Secrets.
+# Local development falls back to the local FastAPI server.
+try:
+    API_URL = st.secrets.get(
+        "API_URL",
+        os.getenv("API_URL", "http://127.0.0.1:8000")
+    ).rstrip("/")
+except Exception:
+    API_URL = os.getenv("API_URL", "http://127.0.0.1:8000").rstrip("/")
 DATA_PATH = "data/processed/fraud_features_v2.csv"
 
 # Resolve the model package relative to the project root, not the
@@ -1254,7 +1262,7 @@ elif page == "Model Performance":
             "Check that FastAPI is running and that "
             "GET /monitoring/model-performance is available."
         )
-        st.code("http://127.0.0.1:8000/monitoring/model-performance")
+        st.code(f"{API_URL}/monitoring/model-performance")
 
     else:
         # Accept either the documented nested response or a direct payload.
