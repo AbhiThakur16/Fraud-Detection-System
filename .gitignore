@@ -50,6 +50,8 @@ data/backup/
 
 # Generated Data
 data/processed/
+!data/processed/
+!data/processed/fraud_features_v2.csv
 data/history/
 
 # Model Artifacts - Keep only final packaged model
